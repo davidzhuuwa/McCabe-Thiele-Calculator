@@ -3,7 +3,7 @@
 Created on Fri Jul 19 09:01:42 2019
 
 This script is designed to calculate the minimum number of stages required for
-a distillation column separating a purely binary mixture based on the reflux
+a distillation column separating a binary mixture based on the reflux
 ratio, relative volatility, feed and product compositions. A McCabe-Thiele 
 figure is output as a result along with the minimum number of stages
 
@@ -16,11 +16,12 @@ distillation columns.
 """
 
 import tkinter as tk
-
 import matplotlib.pyplot as plt
 import numpy as np
+import debugpy as db 
 
-comp = [0.6, 0.915, 0.05, 3, 3, 1.2] #Initial feed values
+# Initial Feed Values
+comp = [0.6, 0.915, 0.05, 3, 3, 1.2] 
 
 class Composition:
     def __init__(self,feed,distillate,bottoms,reflux,volatility, feedquality):
@@ -93,10 +94,7 @@ class Composition:
         y_s = x_s * slope_s + self.bottoms*(1-slope_s)
         return (x_s,y_s)
         
-        
-
 #Calling sample fluid composition and column data
-        
 #Setting up the user interface
 def extract_entry_fields():
     global comp # makes composition a global variable
@@ -126,7 +124,7 @@ e4=tk.Entry(master)
 e5=tk.Entry(master)
 e6=tk.Entry(master)
 
-#inserts default values for each property
+# inserts default values for each property
 e1.insert(10, 0.6) #not sure why 10 is needed in first argument
 e2.insert(10,0.915)
 e3.insert(10,0.05)
@@ -134,7 +132,7 @@ e4.insert(10,3)
 e5.insert(10,3)
 e6.insert(10,1.1)
 
-#defines the location of the textboxes
+# defines the location of the textboxes
 e1.grid(row=0,column=1)
 e2.grid(row=1,column=1)
 e3.grid(row=2,column=1)
@@ -144,10 +142,9 @@ e6.grid(row=5,column=1)
 
 master.title("McCabe-Thiele Calculator")
 master.geometry("600x375")
-#terminating the program setup
+# terminating the program setup
 class HaltException(Exception):
     pass
-
 
 def close_window_calculate():
     extract_entry_fields()
@@ -176,9 +173,7 @@ tk.Button(master,
 
 master.mainloop()
 
-    
-
-    
+# Now the code below will set up the plot of the McCabe-Thiele Diagram
 data = Composition(float(comp[0]),float(comp[1]),
                    float(comp[2]),float(comp[3]),
                    float(comp[4]),float(comp[5]))
@@ -191,39 +186,32 @@ plt.ylabel('y (vapour mole fraction)')
          
          
 #Plotting the vertical bottoms, feed and distillate lines
-         
 plt.plot([data.bottoms,data.bottoms],[0,data.bottoms])
 plt.plot([data.feed,data.feed],[0,data.feed])
 plt.plot([data.distillate,data.distillate],[0,data.distillate])
 
 # Plotting the VLE curve based on the volatility
-
 plt.plot(np.array(np.arange(0,1,0.001)),data.VLE())
 
-#Plotting the rectifying line
-
-
+# Plotting the rectifying line
 RL = data.rectifying_line()
 plt.plot(RL[0],RL[1])
 
-#Plotting the feed quality line
-
-
+# Plotting the feed quality line
 QL = data.feed_quality_line()
 plt.plot(QL[0],QL[1])
 
-#Plotting the stripping line
+# Plotting the stripping line
 SL = data.stripping_line()
 plt.plot(SL[0],SL[1])
 
+# Plotting the number of stages
+# Start with horizontal line at x_distillate, until it reaches intersect between
+# VLE curve. Then draw vertical line untilit intersects with the ROL or SOL
+# for x>x q-ROL intercept, should be ROL
+# otherwise, for x<x q-ROL intercept, should be SOL (for vertical lines)
 
-#Plotting the number of stages
-#Start with horizontal line at x_distillate, until it reaches intersect between
-#VLE curve. Then draw vertical line untilit intersects with the ROL or SOL
-#for x>x q-ROL intercept, should be ROL
-#otherwise, for x<x q-ROL intercept, should be SOL (for vertical lines)
-
-#Initial Horizontal Line
+# Initial Horizontal Line
 y_ini = data.distillate
 x_ini = data.distillate
 x_d = data.distillate
@@ -231,7 +219,7 @@ RV = data.volatility
 x_end = y_ini/(RV*(-y_ini)+RV+y_ini)
 plt.hlines(y_ini,x_end,x_ini)
 
-#Initial vertical line
+# Initial vertical line
 RR = data.reflux #reflux ratio
 x_q = data.qline_ROL_intersect()[0] #x fraction where q-line and ROl intersect
 y_q = data.qline_ROL_intersect()[1] #same but y-fraction
@@ -239,7 +227,7 @@ x_b = data.bottoms
 
 count = 1
 
-#parameters for stripping line
+# Parameters for stripping line
 m_strip = (y_q - x_b)/(x_q-x_b)
 int_strip = x_b*(1-m_strip)
 
@@ -251,16 +239,15 @@ else: #stops at stripping line
 
 plt.vlines(x_end,y_end,y_ini) #syntax (xcoord, ymin, ymax)
 
-#now, looping through the remainder of the stages
+# Looping through the remainder of the stages
 while(x_end>=x_b):
-    #Now plotting horizontal line in loop
+    # Now plotting horizontal line in loop
     x_ini = x_end
     y_ini = y_end
     x_end = y_ini/(RV*(-y_ini)+RV+y_ini)
     plt.hlines(y_ini,x_end,x_ini, colors="yellow")
-    
-    
-    #Plotting vertical line in loop
+
+    # Plotting vertical line in loop
     if x_end >= x_q:
         y_end = ((RR)/(RR+1))*x_end + (1/(RR+1))*x_d
     else:
@@ -268,5 +255,5 @@ while(x_end>=x_b):
     plt.vlines(x_end,y_end,y_ini,colors ="yellow")
     count +=1
 
-#figure(num=None, figsize=(12, 10), dpi=80, facecolor='w', edgecolor='k')
+plt.figure(num=None, figsize=(12, 10), dpi=80, facecolor='w', edgecolor='k')
 print("Minimum number of stages required is {}".format(count)) 
