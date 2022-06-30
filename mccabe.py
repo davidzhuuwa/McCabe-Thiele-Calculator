@@ -19,9 +19,10 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 import numpy as np
 import debugpy as db 
+from matplotlib.ticker import (MultipleLocator,AutoMinorLocator)
 
 # Initial Feed Values
-comp = [0.6, 0.915, 0.05, 3, 3, 1.2] 
+comp = [0.1153, 0.77863338, 0.1039495217, 4, 2.48, 1.1] 
 
 class Composition:
     def __init__(self,feed,distillate,bottoms,reflux,volatility, feedquality):
@@ -125,12 +126,12 @@ e5=tk.Entry(master)
 e6=tk.Entry(master)
 
 # inserts default values for each property
-e1.insert(10, 0.6) #not sure why 10 is needed in first argument
-e2.insert(10,0.915)
-e3.insert(10,0.05)
-e4.insert(10,3)
-e5.insert(10,3)
-e6.insert(10,1.1)
+e1.insert(10,comp[0]) #not sure why 10 is needed in first argument
+e2.insert(10,comp[1])
+e3.insert(10,comp[2])
+e4.insert(10,comp[3])
+e5.insert(10,comp[4])
+e6.insert(10,comp[5])
 
 # defines the location of the textboxes
 e1.grid(row=0,column=1)
@@ -177,7 +178,16 @@ master.mainloop()
 data = Composition(float(comp[0]),float(comp[1]),
                    float(comp[2]),float(comp[3]),
                    float(comp[4]),float(comp[5]))
-plt.figure(figsize=(12,8))
+
+# Todo - rewrite plotting code to be more OOP orientedl. 
+fig = plt.figure(num=None, figsize=(12, 10), dpi=200, facecolor='w', edgecolor='k')
+#fig,ax = plt.subplots(figsize=(12,10),dpi=80,facecolor='w',edgecolor='k')
+# Set plot axes to have major ticks of 0.1, minor ticks of 0.02
+#ax.xaxis.set_major_locator(MultipleLocator(0.1))
+#ax.yaxis.set_major_locator(MultipleLocator(0.1))
+#ax.xaxis.set_minor_locator(MultipleLocator(0.02))
+#ax.yaxis.set_minor_locator(MultipleLocator(0.02))
+
 plt.plot([0,1],[0,1]) # y = x line
 plt.xlabel('x (liquid mole fraction)')
 plt.ylabel('y (vapour mole fraction)')
@@ -217,7 +227,7 @@ x_ini = data.distillate
 x_d = data.distillate
 RV = data.volatility
 x_end = y_ini/(RV*(-y_ini)+RV+y_ini)
-plt.hlines(y_ini,x_end,x_ini)
+plt.hlines(y_ini,x_end,x_ini,colors ="black")
 
 # Initial vertical line
 RR = data.reflux #reflux ratio
@@ -237,7 +247,7 @@ if x_end >= x_q: #stops at rectifying operating line
 else: #stops at stripping line
     y_end = m_strip*x_end + int_strip
 
-plt.vlines(x_end,y_end,y_ini) #syntax (xcoord, ymin, ymax)
+plt.vlines(x_end,y_end,y_ini,colors ="black") #syntax (xcoord, ymin, ymax)
 
 # Looping through the remainder of the stages
 while(x_end>=x_b):
@@ -245,15 +255,18 @@ while(x_end>=x_b):
     x_ini = x_end
     y_ini = y_end
     x_end = y_ini/(RV*(-y_ini)+RV+y_ini)
-    plt.hlines(y_ini,x_end,x_ini, colors="yellow")
+    plt.hlines(y_ini,x_end,x_ini, colors="black")
 
     # Plotting vertical line in loop
     if x_end >= x_q:
         y_end = ((RR)/(RR+1))*x_end + (1/(RR+1))*x_d
     else:
         y_end = m_strip*x_end+int_strip
-    plt.vlines(x_end,y_end,y_ini,colors ="yellow")
+    plt.vlines(x_end,y_end,y_ini,colors ="black")
     count +=1
+plt.title(f'Minimum number of stages is {count}')
+#plt.figure(num=None, figsize=(12, 10), dpi=200, facecolor='w', edgecolor='k')
 
-plt.figure(num=None, figsize=(12, 10), dpi=80, facecolor='w', edgecolor='k')
-print("Minimum number of stages required is {}".format(count)) 
+print(f"Minimum number of stages required is {count}")
+print("McCabe-Thiele Diagram is saved as 'McCabe.png' in working directory.")
+fig.savefig("McCabe.png")
