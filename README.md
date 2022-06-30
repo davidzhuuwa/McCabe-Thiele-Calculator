@@ -5,7 +5,7 @@
 ## Running the code
 Running the code is as simple as typing "python mccabe.py" in the command window. A basic tkinter GUI will then pop up, prompting for feed quality, reflux ratio, 
 relative volatility, and feed, tops and bottom compositions. Once these are entered, the number of theoretical stages is calculated. 
-A plot of the McCabe Thiele diagram at this stage will only appear if the code is run in a Jupyter interactive window. 
+A plot of the McCabe Thiele diagram at this stage will only appear if the code is run in a Jupyter interactive window. Otherwise, the resulting plot is saved in a .png file.
 
 ## Further details
  
